@@ -1,6 +1,7 @@
 //! A simple 3D scene with light shining over a cube sitting on a plane.
 
 mod player;
+mod cameras;
 mod explosion;
 
 use std::f32::consts::PI;
@@ -8,6 +9,7 @@ use std::f32::consts::PI;
 use bevy::prelude::*;
 
 use player::*;
+use cameras::*;
 use explosion::*;
 
 pub fn main() {
@@ -128,15 +130,6 @@ fn setup(
     ));
 }
 
-#[derive(Debug, PartialEq)]
-enum CameraName {
-    Chase,
-    Main,
-}
-
-#[derive(Component)]
-pub struct SelectableCamera(CameraName);
-
 /// A marker component for our shapes so we can query them separately from the ground plane
 #[derive(Component)]
 struct Shape;
@@ -170,26 +163,6 @@ fn rotate_camera(mut query: Query<&mut Transform, With<Camera3d>>, time: Res<Tim
             Vec3::ZERO,
             Quat::from_rotation_z(time.delta_seconds() / 20.),
         );
-    }
-}
-
-fn camera_select_system(
-    mut query: Query<(&mut Camera, &SelectableCamera)>,
-    keyboard_input: Res<Input<KeyCode>>,
-) {
-    let selected = if keyboard_input.pressed(KeyCode::Key1) {
-        CameraName::Main
-    } else if keyboard_input.pressed(KeyCode::Key2) {
-        CameraName::Chase
-    } else {
-        return;
-    };
-
-    for (mut camera, name) in &mut query {
-        match &name.0 {
-            x if *x == selected => camera.is_active = true,
-            _ => camera.is_active = false,
-        }
     }
 }
 
