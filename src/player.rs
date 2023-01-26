@@ -49,8 +49,12 @@ pub fn player_location_system(
     }
 
     //constrain to arena
-    fn set_at_least(v: &mut f32, min: f32) {*v = f32::max(*v, min)}
-    fn set_at_most(v: &mut f32, max: f32) {*v = f32::min(*v, max)}
+    fn set_at_least(v: &mut f32, min: f32) {
+        *v = f32::max(*v, min)
+    }
+    fn set_at_most(v: &mut f32, max: f32) {
+        *v = f32::min(*v, max)
+    }
 
     set_at_least(&mut player_loc.translation.x, -5.);
     set_at_most(&mut player_loc.translation.x, 5.);
