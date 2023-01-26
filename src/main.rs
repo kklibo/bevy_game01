@@ -1,11 +1,13 @@
 //! A simple 3D scene with light shining over a cube sitting on a plane.
 
+mod player;
 mod explosion;
 
 use std::f32::consts::PI;
 
 use bevy::prelude::*;
 
+use player::*;
 use explosion::*;
 
 pub fn main() {
@@ -133,17 +135,11 @@ enum CameraName {
 }
 
 #[derive(Component)]
-struct SelectableCamera(CameraName);
+pub struct SelectableCamera(CameraName);
 
 /// A marker component for our shapes so we can query them separately from the ground plane
 #[derive(Component)]
 struct Shape;
-
-#[derive(Component)]
-struct PlayerLocation;
-
-#[derive(Component)]
-struct PlayerModel;
 
 #[derive(Component)]
 struct TargetDrone {
@@ -151,7 +147,7 @@ struct TargetDrone {
 }
 
 #[derive(Component)]
-struct Blaster {
+pub struct Blaster {
     cooldown_time: f32,
     time_of_last_shot: f32,
 }
@@ -177,58 +173,6 @@ fn rotate_camera(mut query: Query<&mut Transform, With<Camera3d>>, time: Res<Tim
     }
 }
 
-fn player_location_system(
-    mut query: Query<
-        (&mut Transform, &SelectableCamera),
-        (Without<PlayerLocation>, Without<PlayerModel>),
-    >,
-    mut query2: Query<&mut Transform, (With<PlayerLocation>, Without<PlayerModel>)>,
-    mut query3: Query<&mut Transform, (Without<PlayerLocation>, With<PlayerModel>)>,
-    keyboard_input: Res<Input<KeyCode>>,
-    time: Res<Time>,
-) {
-    let mut player_loc = match query2.iter_mut().next() {
-        Some(x) => x,
-        None => return,
-    };
-
-    let mut player_model_loc = match query3.iter_mut().next() {
-        Some(x) => x,
-        None => return,
-    };
-
-    const MPS: f32 = 5.0;
-    const DPS: f32 = 180.0;
-
-    if keyboard_input.pressed(KeyCode::Up) {
-        let step = player_loc.forward() * MPS * time.delta_seconds();
-        player_loc.translation += step;
-    }
-    if keyboard_input.pressed(KeyCode::Down) {
-        let step = player_loc.back() * MPS * time.delta_seconds();
-        player_loc.translation += step;
-    }
-    if keyboard_input.pressed(KeyCode::Left) {
-        let step = DPS * time.delta_seconds();
-        player_loc.rotate_z(step.to_radians());
-    }
-    if keyboard_input.pressed(KeyCode::Right) {
-        let step = DPS * time.delta_seconds() * -1.0;
-        player_loc.rotate_z(step.to_radians());
-    }
-
-    for (mut camera_loc, name) in &mut query {
-        if name.0 == CameraName::Chase {
-            *camera_loc = *player_loc;
-            camera_loc.translation += player_loc.forward() * -5.0;
-            camera_loc.translation += Vec3::new(0., 0., 4.);
-            camera_loc.look_at(player_loc.translation, Vec3::Z);
-
-            *player_model_loc = *player_loc;
-        }
-    }
-}
-
 fn camera_select_system(
     mut query: Query<(&mut Camera, &SelectableCamera)>,
     keyboard_input: Res<Input<KeyCode>>,
@@ -245,37 +189,6 @@ fn camera_select_system(
         match &name.0 {
             x if *x == selected => camera.is_active = true,
             _ => camera.is_active = false,
-        }
-    }
-}
-
-fn player_shoot_system(
-    mut commands: Commands,
-    mut meshes: ResMut<Assets<Mesh>>,
-    mut materials: ResMut<Assets<StandardMaterial>>,
-    mut query: Query<(&mut Transform, &mut Blaster), (With<PlayerLocation>, Without<PlayerModel>)>,
-    keyboard_input: Res<Input<KeyCode>>,
-    time: Res<Time>,
-) {
-    let (player_loc, mut blaster) = query.iter_mut().next().unwrap();
-
-    if keyboard_input.pressed(KeyCode::Space) {
-        let now = time.elapsed_seconds();
-        if blaster.time_of_last_shot + blaster.cooldown_time < now {
-            blaster.time_of_last_shot = now;
-
-            commands.spawn((
-                PbrBundle {
-                    mesh: meshes.add(Mesh::from(shape::Cube { size: 0.05 })),
-                    material: materials.add(Color::rgb(0.5, 0.5, 1.0).into()),
-                    transform: *player_loc,
-                    ..default()
-                },
-                Projectile {
-                    creation_time_sec: now,
-                    lifetime_sec: 1.,
-                },
-            ));
         }
     }
 }
