@@ -21,6 +21,7 @@ pub fn main() {
         .add_plugins(DefaultPlugins)
         .add_startup_system(setup)
         .add_startup_system(arena::setup)
+        .add_startup_system(player::setup)
         .add_startup_system(cameras::setup)
         .add_system(rotate)
         //.add_system(rotate_camera)
@@ -39,25 +40,6 @@ fn setup(
     mut meshes: ResMut<Assets<Mesh>>,
     mut materials: ResMut<Assets<StandardMaterial>>,
 ) {
-    commands.spawn((
-        Transform::from_xyz(0., -5., 0.).looking_at(Vec3::ZERO, Vec3::Z),
-        PlayerLocation,
-        Blaster {
-            cooldown_time: 1.,
-            time_of_last_shot: 0.,
-        },
-    ));
-
-    // player location cube
-    commands.spawn((
-        PbrBundle {
-            mesh: meshes.add(Mesh::from(shape::Cube { size: 0.1 })),
-            material: materials.add(Color::rgb(0.8, 0.2, 0.1).into()),
-            ..default()
-        },
-        PlayerModel,
-    ));
-
     // target drone cube
     commands.spawn((
         PbrBundle {
