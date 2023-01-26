@@ -1,8 +1,12 @@
 //! A simple 3D scene with light shining over a cube sitting on a plane.
 
+mod explosion;
+
 use std::f32::consts::PI;
 
 use bevy::prelude::*;
+
+use explosion::*;
 
 pub fn main() {
     App::new()
@@ -158,12 +162,6 @@ struct Projectile {
     lifetime_sec: f32,
 }
 
-#[derive(Component, Debug)]
-struct Explosion {
-    creation_time_sec: f32,
-    lifetime_sec: f32,
-}
-
 fn rotate(mut query: Query<&mut Transform, With<Shape>>, time: Res<Time>) {
     for mut transform in &mut query {
         transform.rotate_z(time.delta_seconds() / 2.);
@@ -306,40 +304,6 @@ fn projectile_physics_system(
                 commands.entity(target_entity).despawn();
                 spawn_explosion(target_loc.translation, &mut commands, &time);
             }
-        }
-    }
-}
-
-fn spawn_explosion(loc: Vec3, commands: &mut Commands, time: &Res<Time>) {
-    let now = time.elapsed_seconds();
-
-    commands.spawn((
-        PointLightBundle {
-            point_light: PointLight {
-                intensity: 15000.0,
-                shadows_enabled: true,
-                color: Color::RED,
-                ..default()
-            },
-            transform: Transform::from_translation(loc),
-            ..default()
-        },
-        Explosion {
-            lifetime_sec: 1.,
-            creation_time_sec: now,
-        },
-    ));
-}
-
-fn explosion_system(
-    mut commands: Commands,
-    mut query: Query<(Entity, &mut Transform, &mut Explosion)>,
-    time: Res<Time>,
-) {
-    let now = time.elapsed_seconds();
-    for (entity, _, mut explosion) in query.iter_mut() {
-        if explosion.creation_time_sec + explosion.lifetime_sec < now {
-            commands.entity(entity).despawn();
         }
     }
 }
