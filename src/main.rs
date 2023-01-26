@@ -21,6 +21,7 @@ pub fn main() {
         .add_plugins(DefaultPlugins)
         .add_startup_system(setup)
         .add_startup_system(arena::setup)
+        .add_startup_system(cameras::setup)
         .add_system(rotate)
         //.add_system(rotate_camera)
         .add_system(player_location_system)
@@ -38,31 +39,6 @@ fn setup(
     mut meshes: ResMut<Assets<Mesh>>,
     mut materials: ResMut<Assets<StandardMaterial>>,
 ) {
-    // camera
-    commands.spawn((
-        Camera3dBundle {
-            transform: Transform::from_xyz(-2.0, 5.0, 2.5).looking_at(Vec3::ZERO, Vec3::Z),
-            camera: Camera {
-                is_active: true,
-                ..default()
-            },
-            ..default()
-        },
-        SelectableCamera(CameraName::Chase),
-    ));
-    // camera
-    commands.spawn((
-        Camera3dBundle {
-            transform: Transform::from_xyz(0., 0., 10.).looking_at(Vec3::ZERO, Vec3::Y),
-            camera: Camera {
-                is_active: false,
-                ..default()
-            },
-            ..default()
-        },
-        SelectableCamera(CameraName::Main),
-    ));
-
     commands.spawn((
         Transform::from_xyz(0., -5., 0.).looking_at(Vec3::ZERO, Vec3::Z),
         PlayerLocation,

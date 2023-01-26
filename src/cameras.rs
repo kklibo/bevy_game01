@@ -28,3 +28,32 @@ pub fn camera_select_system(
         }
     }
 }
+
+pub fn setup(
+    mut commands: Commands,
+) {
+    // camera
+    commands.spawn((
+        Camera3dBundle {
+            transform: Transform::from_xyz(-2.0, 5.0, 2.5).looking_at(Vec3::ZERO, Vec3::Z),
+            camera: Camera {
+                is_active: true,
+                ..default()
+            },
+            ..default()
+        },
+        SelectableCamera(CameraName::Chase),
+    ));
+    // camera
+    commands.spawn((
+        Camera3dBundle {
+            transform: Transform::from_xyz(0., 0., 10.).looking_at(Vec3::ZERO, Vec3::Y),
+            camera: Camera {
+                is_active: false,
+                ..default()
+            },
+            ..default()
+        },
+        SelectableCamera(CameraName::Main),
+    ));
+}
