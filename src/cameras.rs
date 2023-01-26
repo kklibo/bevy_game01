@@ -29,9 +29,7 @@ pub fn camera_select_system(
     }
 }
 
-pub fn setup(
-    mut commands: Commands,
-) {
+pub fn setup(mut commands: Commands) {
     // camera
     commands.spawn((
         Camera3dBundle {

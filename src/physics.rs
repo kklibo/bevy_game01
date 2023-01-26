@@ -28,7 +28,7 @@ pub fn projectile_physics_system(
     const MPS: f32 = 0.1;
 
     let now = time.elapsed_seconds();
-    for (entity, mut loc, mut projectile) in query.iter_mut() {
+    for (entity, mut loc, projectile) in query.iter_mut() {
         if projectile.creation_time_sec + projectile.lifetime_sec < now {
             commands.entity(entity).despawn();
             continue;

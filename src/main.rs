@@ -1,20 +1,16 @@
-//! A simple 3D scene with light shining over a cube sitting on a plane.
-
 mod arena;
-mod player;
 mod cameras;
 mod explosion;
 mod physics;
-
-use std::f32::consts::PI;
+mod player;
 
 use bevy::prelude::*;
 
 use arena::*;
-use player::*;
 use cameras::*;
 use explosion::*;
 use physics::*;
+use player::*;
 
 pub fn main() {
     App::new()
@@ -24,7 +20,6 @@ pub fn main() {
         .add_startup_system(player::setup)
         .add_startup_system(cameras::setup)
         .add_system(rotate)
-        //.add_system(rotate_camera)
         .add_system(player_location_system)
         .add_system(camera_select_system)
         .add_system(player_shoot_system)
@@ -34,7 +29,6 @@ pub fn main() {
         .run();
 }
 
-/// set up a simple 3D scene
 fn setup(
     mut commands: Commands,
     mut meshes: ResMut<Assets<Mesh>>,
@@ -50,14 +44,4 @@ fn setup(
         },
         TargetDrone { radius: 0.1 },
     ));
-}
-
-
-fn rotate_camera(mut query: Query<&mut Transform, With<Camera3d>>, time: Res<Time>) {
-    for mut transform in &mut query {
-        transform.rotate_around(
-            Vec3::ZERO,
-            Quat::from_rotation_z(time.delta_seconds() / 20.),
-        );
-    }
 }

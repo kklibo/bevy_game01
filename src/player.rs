@@ -1,6 +1,6 @@
 use bevy::prelude::*;
 
-use crate::{SelectableCamera, CameraName, Projectile, Blaster};
+use crate::{Blaster, CameraName, Projectile, SelectableCamera};
 
 #[derive(Component)]
 pub struct PlayerLocation;

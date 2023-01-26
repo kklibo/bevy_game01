@@ -33,7 +33,7 @@ pub fn explosion_system(
     time: Res<Time>,
 ) {
     let now = time.elapsed_seconds();
-    for (entity, _, mut explosion) in query.iter_mut() {
+    for (entity, _, explosion) in query.iter_mut() {
         if explosion.creation_time_sec + explosion.lifetime_sec < now {
             commands.entity(entity).despawn();
         }
