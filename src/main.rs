@@ -4,6 +4,7 @@ mod arena;
 mod player;
 mod cameras;
 mod explosion;
+mod physics;
 
 use std::f32::consts::PI;
 
@@ -13,6 +14,7 @@ use arena::*;
 use player::*;
 use cameras::*;
 use explosion::*;
+use physics::*;
 
 pub fn main() {
     App::new()
@@ -92,22 +94,6 @@ fn setup(
     ));
 }
 
-#[derive(Component)]
-struct TargetDrone {
-    radius: f32,
-}
-
-#[derive(Component)]
-pub struct Blaster {
-    cooldown_time: f32,
-    time_of_last_shot: f32,
-}
-
-#[derive(Component, Debug)]
-struct Projectile {
-    creation_time_sec: f32,
-    lifetime_sec: f32,
-}
 
 fn rotate_camera(mut query: Query<&mut Transform, With<Camera3d>>, time: Res<Time>) {
     for mut transform in &mut query {
@@ -115,33 +101,5 @@ fn rotate_camera(mut query: Query<&mut Transform, With<Camera3d>>, time: Res<Tim
             Vec3::ZERO,
             Quat::from_rotation_z(time.delta_seconds() / 20.),
         );
-    }
-}
-
-fn projectile_physics_system(
-    mut commands: Commands,
-    mut query: Query<(Entity, &mut Transform, &mut Projectile), Without<TargetDrone>>,
-    mut query2: Query<(Entity, &mut Transform, &mut TargetDrone), Without<Projectile>>,
-    time: Res<Time>,
-) {
-    const MPS: f32 = 0.1;
-
-    let now = time.elapsed_seconds();
-    for (entity, mut loc, mut projectile) in query.iter_mut() {
-        if projectile.creation_time_sec + projectile.lifetime_sec < now {
-            commands.entity(entity).despawn();
-            continue;
-        }
-
-        let step = loc.forward() * MPS;
-        loc.translation += step;
-
-        for (target_entity, target_loc, target_drone) in query2.iter_mut() {
-            if loc.translation.distance(target_loc.translation) < target_drone.radius {
-                commands.entity(entity).despawn();
-                commands.entity(target_entity).despawn();
-                spawn_explosion(target_loc.translation, &mut commands, &time);
-            }
-        }
     }
 }
