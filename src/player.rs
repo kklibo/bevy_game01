@@ -48,6 +48,19 @@ pub fn player_location_system(
         player_loc.rotate_z(step.to_radians());
     }
 
+    //constrain to arena
+    fn set_at_least(v: &mut f32, min: f32) {
+        *v = f32::max(*v, min)
+    }
+    fn set_at_most(v: &mut f32, max: f32) {
+        *v = f32::min(*v, max)
+    }
+
+    set_at_least(&mut player_loc.translation.x, -5.);
+    set_at_most(&mut player_loc.translation.x, 5.);
+    set_at_least(&mut player_loc.translation.y, -5.);
+    set_at_most(&mut player_loc.translation.y, 5.);
+
     for (mut camera_loc, name) in &mut query {
         if name.0 == CameraName::Chase {
             *camera_loc = *player_loc;
@@ -68,7 +81,10 @@ pub fn player_shoot_system(
     keyboard_input: Res<Input<KeyCode>>,
     time: Res<Time>,
 ) {
-    let (player_loc, mut blaster) = query.iter_mut().next().unwrap();
+    let (player_loc, mut blaster) = match query.iter_mut().next() {
+        Some(x) => x,
+        None => return,
+    };
 
     if keyboard_input.pressed(KeyCode::Space) {
         let now = time.elapsed_seconds();
