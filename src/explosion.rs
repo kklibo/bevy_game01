@@ -24,7 +24,7 @@ pub fn explosion_system(
         let mut entity = commands.spawn((
             PointLightBundle {
                 point_light: PointLight {
-                    intensity: 15000.0,
+                    intensity: 3000.0,
                     shadows_enabled: true,
                     color: Color::RED,
                     ..default()
