@@ -29,6 +29,7 @@ pub fn main() {
         .add_system(player_shoot_system)
         .add_system(projectile_physics_system)
         .add_system(explosion_system)
+        .add_system(spawn_enemy_system)
         .add_system(enemy_movement_system)
         .add_system(enemy_shooting_system)
         .add_system(bevy::window::close_on_esc)

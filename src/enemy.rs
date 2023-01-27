@@ -1,5 +1,6 @@
 use bevy::prelude::*;
 use rand::Rng;
+use std::time::Duration;
 
 use crate::Blaster;
 use crate::Hittable;
@@ -20,26 +21,36 @@ impl Enemy {
     pub const SHOOT_ANGLE_DEG: f32 = 45.0;
 }
 
-pub fn setup(
+#[derive(Resource)]
+pub struct SpawnTimer(Timer);
+
+pub fn setup(mut commands: Commands) {
+    commands.insert_resource(SpawnTimer(Timer::new(
+        Duration::from_secs(1),
+        TimerMode::Repeating,
+    )));
+}
+
+pub fn spawn_enemy_system(
     mut commands: Commands,
     mut meshes: ResMut<Assets<Mesh>>,
     mut materials: ResMut<Assets<StandardMaterial>>,
+    time: Res<Time>,
+    mut timer: ResMut<SpawnTimer>,
 ) {
-    spawn_enemy(
-        &mut commands,
-        &mut meshes,
-        &mut materials,
-        Transform::from_xyz(-4., 2., 0.).looking_at(Vec3::ZERO, Vec3::Z),
-    );
-    spawn_enemy(
-        &mut commands,
-        &mut meshes,
-        &mut materials,
-        Transform::from_xyz(-4., 2., 0.).looking_at(Vec3::new(-5., 5., 0.), Vec3::Z),
-    );
+    timer.0.tick(time.delta());
+
+    if timer.0.finished() {
+        spawn_enemy(
+            &mut commands,
+            &mut meshes,
+            &mut materials,
+            Transform::from_translation(random_coord()).looking_at(random_coord(), Vec3::Z),
+        );
+    }
 }
 
-pub fn spawn_enemy(
+fn spawn_enemy(
     commands: &mut Commands,
     meshes: &mut ResMut<Assets<Mesh>>,
     materials: &mut ResMut<Assets<StandardMaterial>>,
