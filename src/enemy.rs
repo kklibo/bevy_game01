@@ -1,4 +1,5 @@
 use bevy::prelude::*;
+use rand::Rng;
 
 use crate::Blaster;
 use crate::Hittable;
@@ -63,6 +64,16 @@ pub fn spawn_enemy(
     ));
 }
 
+fn random_coord() -> Vec3 {
+    let mut rng = rand::thread_rng();
+
+    Vec3::new(
+        rng.gen_range(-4..=4) as f32,
+        rng.gen_range(-4..=4) as f32,
+        0.,
+    )
+}
+
 pub fn enemy_movement_system(
     mut query: Query<(&mut Transform, &mut Enemy), Without<Player>>,
     mut query2: Query<&mut Transform, (With<Player>, Without<Enemy>)>,
@@ -87,12 +98,7 @@ pub fn enemy_movement_system(
                 let to_waypoint = x - loc.translation;
                 if to_waypoint.length() < Enemy::WAYPOINT_RADIUS_M {
                     //new waypoint
-                    // temp
-                    if enemy.next_waypoint == Some(Vec3::new(-4., -4., 0.)) {
-                        enemy.next_waypoint = None;
-                    } else {
-                        enemy.next_waypoint = Some(Vec3::new(-4., -4., 0.));
-                    }
+                    enemy.next_waypoint = Some(random_coord());
                     continue;
                 }
                 selected_target = Some(x);
