@@ -10,35 +10,39 @@ pub struct ExplosionEvent {
     pub location: Vec3,
 }
 
-fn spawn_explosion(loc: Vec3, commands: &mut Commands, time: &Res<Time>) {
-    let now = time.elapsed_seconds();
-
-    commands.spawn((
-        PointLightBundle {
-            point_light: PointLight {
-                intensity: 15000.0,
-                shadows_enabled: true,
-                color: Color::RED,
-                ..default()
-            },
-            transform: Transform::from_translation(loc),
-            ..default()
-        },
-        Explosion {
-            lifetime_sec: 1.,
-            creation_time_sec: now,
-        },
-    ));
-}
-
 pub fn explosion_system(
     mut commands: Commands,
+    mut meshes: ResMut<Assets<Mesh>>,
+    mut materials: ResMut<Assets<StandardMaterial>>,
     mut explosion_events: EventReader<ExplosionEvent>,
     mut query: Query<(Entity, &mut Transform, &mut Explosion)>,
     time: Res<Time>,
 ) {
     for x in explosion_events.iter() {
-        spawn_explosion(x.location, &mut commands, &time);
+        let now = time.elapsed_seconds();
+        let mut entity = commands.spawn((
+            PointLightBundle {
+                point_light: PointLight {
+                    intensity: 15000.0,
+                    shadows_enabled: true,
+                    color: Color::RED,
+                    ..default()
+                },
+                transform: Transform::from_translation(x.location),
+                ..default()
+            },
+            Explosion {
+                lifetime_sec: 1.,
+                creation_time_sec: now,
+            },
+        ));
+        //adds explosion cube, overwriting some previous components (fix this?)
+        entity.insert(PbrBundle {
+            mesh: meshes.add(Mesh::from(shape::Cube { size: 1.0 })),
+            material: materials.add(Color::rgba(0.8, 0.2, 0.1, 0.5).into()),
+            transform: Transform::from_translation(x.location),
+            ..default()
+        });
     }
 
     let now = time.elapsed_seconds();
