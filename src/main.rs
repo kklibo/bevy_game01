@@ -1,3 +1,5 @@
+#![allow(clippy::type_complexity)]
+
 mod arena;
 mod cameras;
 mod enemy;
@@ -26,7 +28,6 @@ pub fn main() {
         .add_system(camera_select_system)
         .add_system(player_shoot_system)
         .add_system(projectile_physics_system)
-        .add_system(enemy_projectile_physics_system)
         .add_system(explosion_system)
         .add_system(enemy_movement_system)
         .add_system(enemy_shooting_system)

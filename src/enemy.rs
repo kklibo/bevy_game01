@@ -1,71 +1,73 @@
 use bevy::prelude::*;
 
 use crate::Blaster;
-use crate::PlayerLocation;
+use crate::Hittable;
+use crate::Player;
 use crate::Projectile;
 
 #[derive(Component)]
 pub struct Enemy {
-    pub radius: f32,
     pub next_waypoint: Option<Vec3>,
 }
 
-#[derive(Component)]
-pub struct EnemyProjectile;
+impl Enemy {
+    pub const MPS: f32 = 1.0;
+    pub const DPS: f32 = 180.0;
+    pub const WAYPOINT_RADIUS_M: f32 = 1.0;
+    pub const VISION_RADIUS_M: f32 = 2.0;
+    pub const SHOOT_RADIUS_M: f32 = 1.0;
+    pub const SHOOT_ANGLE_DEG: f32 = 45.0;
+}
 
 pub fn setup(
     mut commands: Commands,
     mut meshes: ResMut<Assets<Mesh>>,
     mut materials: ResMut<Assets<StandardMaterial>>,
 ) {
-    // enemy cube
-    commands.spawn((
-        PbrBundle {
-            mesh: meshes.add(Mesh::from(shape::Cube { size: 0.1 })),
-            material: materials.add(Color::rgb(0.8, 0.8, 0.1).into()),
-            transform: Transform::from_xyz(-4., 2., 0.).looking_at(Vec3::ZERO, Vec3::Z),
-            ..default()
-        },
-        Enemy {
-            radius: 0.1,
-            next_waypoint: Some(Vec3::ZERO),
-        },
-        Blaster {
-            time_of_last_shot: 0.,
-            cooldown_time: 1.,
-        },
-    ));
+    spawn_enemy(
+        &mut commands,
+        &mut meshes,
+        &mut materials,
+        Transform::from_xyz(-4., 2., 0.).looking_at(Vec3::ZERO, Vec3::Z),
+    );
+    spawn_enemy(
+        &mut commands,
+        &mut meshes,
+        &mut materials,
+        Transform::from_xyz(-4., 2., 0.).looking_at(Vec3::new(-5., 5., 0.), Vec3::Z),
+    );
+}
 
+pub fn spawn_enemy(
+    commands: &mut Commands,
+    meshes: &mut ResMut<Assets<Mesh>>,
+    materials: &mut ResMut<Assets<StandardMaterial>>,
+    transform: Transform,
+) {
     // enemy cube
     commands.spawn((
         PbrBundle {
             mesh: meshes.add(Mesh::from(shape::Cube { size: 0.1 })),
             material: materials.add(Color::rgb(0.8, 0.8, 0.1).into()),
-            transform: Transform::from_xyz(-4., 2., 0.).looking_at(Vec3::new(-5., 5., 0.), Vec3::Z),
+            transform,
             ..default()
         },
         Enemy {
-            radius: 0.1,
             next_waypoint: Some(Vec3::ZERO),
         },
         Blaster {
             time_of_last_shot: 0.,
             cooldown_time: 1.,
         },
+        Hittable { radius: 0.1 },
     ));
 }
 
 pub fn enemy_movement_system(
-    mut query: Query<(&mut Transform, &mut Enemy), Without<PlayerLocation>>,
-    mut query2: Query<&mut Transform, (With<PlayerLocation>, Without<Enemy>)>,
+    mut query: Query<(&mut Transform, &mut Enemy), Without<Player>>,
+    mut query2: Query<&mut Transform, (With<Player>, Without<Enemy>)>,
     time: Res<Time>,
 ) {
-    const MPS: f32 = 1.0;
-    const DPS: f32 = 180.0;
-
-    const WAYPOINT_RADIUS_M: f32 = 1.0;
-    const VISION_RADIUS_M: f32 = 2.0;
-
     for (mut loc, mut enemy) in query.iter_mut() {
         let mut selected_target = None;
 
@@ -73,7 +75,7 @@ pub fn enemy_movement_system(
             //try to target player
             if let Some(player_loc) = query2.iter_mut().next() {
                 let to_player = player_loc.translation - loc.translation;
-                if to_player.length() < VISION_RADIUS_M {
+                if to_player.length() < Enemy::VISION_RADIUS_M {
                     selected_target = Some(player_loc.translation);
                 }
             }
@@ -83,7 +85,7 @@ pub fn enemy_movement_system(
             //waypoint target
             if let Some(x) = enemy.next_waypoint {
                 let to_waypoint = x - loc.translation;
-                if to_waypoint.length() < WAYPOINT_RADIUS_M {
+                if to_waypoint.length() < Enemy::WAYPOINT_RADIUS_M {
                     //new waypoint
                     // temp
                     if enemy.next_waypoint == Some(Vec3::new(-4., -4., 0.)) {
@@ -102,16 +104,16 @@ pub fn enemy_movement_system(
 
             if loc.forward().cross(to_target).dot(Vec3::Z) > 0. {
                 //turn left
-                let step = DPS * time.delta_seconds();
+                let step = Enemy::DPS * time.delta_seconds();
                 loc.rotate_z(step.to_radians());
             } else {
                 //turn right
-                let step = DPS * time.delta_seconds() * -1.;
+                let step = Enemy::DPS * time.delta_seconds() * -1.;
                 loc.rotate_z(step.to_radians());
             }
 
             //move forward
-            let step = loc.forward() * MPS * time.delta_seconds();
+            let step = loc.forward() * Enemy::MPS * time.delta_seconds();
             loc.translation += step;
         }
     }
@@ -121,18 +123,15 @@ pub fn enemy_shooting_system(
     mut commands: Commands,
     mut meshes: ResMut<Assets<Mesh>>,
     mut materials: ResMut<Assets<StandardMaterial>>,
-    mut query: Query<(&mut Transform, &mut Enemy, &mut Blaster), Without<PlayerLocation>>,
-    mut query2: Query<&mut Transform, (With<PlayerLocation>, Without<Enemy>)>,
+    mut query: Query<(Entity, &mut Transform, &mut Enemy, &mut Blaster), Without<Player>>,
+    mut query2: Query<&mut Transform, (With<Player>, Without<Enemy>)>,
     time: Res<Time>,
 ) {
-    const SHOOT_RADIUS_M: f32 = 1.0;
-    const SHOOT_ANGLE_DEG: f32 = 45.0;
-
-    for (loc, _, mut blaster) in query.iter_mut() {
+    for (entity, loc, _, mut blaster) in query.iter_mut() {
         if let Some(player_loc) = query2.iter_mut().next() {
             let to_player = player_loc.translation - loc.translation;
-            if to_player.length() < SHOOT_RADIUS_M
-                && to_player.angle_between(loc.forward()).to_degrees() < SHOOT_ANGLE_DEG
+            if to_player.length() < Enemy::SHOOT_RADIUS_M
+                && to_player.angle_between(loc.forward()).to_degrees() < Enemy::SHOOT_ANGLE_DEG
             {
                 let now = time.elapsed_seconds();
                 if blaster.time_of_last_shot + blaster.cooldown_time < now {
@@ -146,10 +145,10 @@ pub fn enemy_shooting_system(
                             ..default()
                         },
                         Projectile {
+                            owner: entity,
                             creation_time_sec: now,
                             lifetime_sec: 1.,
                         },
-                        EnemyProjectile,
                     ));
                 }
             }

@@ -1,20 +1,20 @@
 use bevy::prelude::*;
 
+use crate::physics::Hittable;
 use crate::{Blaster, CameraName, Projectile, SelectableCamera};
 
 #[derive(Component)]
-pub struct PlayerLocation;
+pub struct Player;
 
-#[derive(Component)]
-pub struct PlayerModel;
+impl Player {
+    pub const MPS: f32 = 5.0;
+    pub const DPS: f32 = 180.0;
+    pub const RADIUS: f32 = 0.1;
+}
 
 pub fn player_location_system(
-    mut query: Query<
-        (&mut Transform, &SelectableCamera),
-        (Without<PlayerLocation>, Without<PlayerModel>),
-    >,
-    mut query2: Query<&mut Transform, (With<PlayerLocation>, Without<PlayerModel>)>,
-    mut query3: Query<&mut Transform, (Without<PlayerLocation>, With<PlayerModel>)>,
+    mut query: Query<(&mut Transform, &SelectableCamera), Without<Player>>,
+    mut query2: Query<&mut Transform, With<Player>>,
     keyboard_input: Res<Input<KeyCode>>,
     time: Res<Time>,
 ) {
@@ -23,28 +23,20 @@ pub fn player_location_system(
         None => return,
     };
 
-    let mut player_model_loc = match query3.iter_mut().next() {
-        Some(x) => x,
-        None => return,
-    };
-
-    const MPS: f32 = 5.0;
-    const DPS: f32 = 180.0;
-
     if keyboard_input.pressed(KeyCode::Up) {
-        let step = player_loc.forward() * MPS * time.delta_seconds();
+        let step = player_loc.forward() * Player::MPS * time.delta_seconds();
         player_loc.translation += step;
     }
     if keyboard_input.pressed(KeyCode::Down) {
-        let step = player_loc.back() * MPS * time.delta_seconds();
+        let step = player_loc.back() * Player::MPS * time.delta_seconds();
         player_loc.translation += step;
     }
     if keyboard_input.pressed(KeyCode::Left) {
-        let step = DPS * time.delta_seconds();
+        let step = Player::DPS * time.delta_seconds();
         player_loc.rotate_z(step.to_radians());
     }
     if keyboard_input.pressed(KeyCode::Right) {
-        let step = DPS * time.delta_seconds() * -1.0;
+        let step = Player::DPS * time.delta_seconds() * -1.0;
         player_loc.rotate_z(step.to_radians());
     }
 
@@ -67,8 +59,6 @@ pub fn player_location_system(
             camera_loc.translation += player_loc.forward() * -5.0;
             camera_loc.translation += Vec3::new(0., 0., 4.);
             camera_loc.look_at(player_loc.translation, Vec3::Z);
-
-            *player_model_loc = *player_loc;
         }
     }
 }
@@ -77,11 +67,11 @@ pub fn player_shoot_system(
     mut commands: Commands,
     mut meshes: ResMut<Assets<Mesh>>,
     mut materials: ResMut<Assets<StandardMaterial>>,
-    mut query: Query<(&mut Transform, &mut Blaster), (With<PlayerLocation>, Without<PlayerModel>)>,
+    mut query: Query<(Entity, &mut Transform, &mut Blaster), With<Player>>,
     keyboard_input: Res<Input<KeyCode>>,
     time: Res<Time>,
 ) {
-    let (player_loc, mut blaster) = match query.iter_mut().next() {
+    let (entity, player_loc, mut blaster) = match query.iter_mut().next() {
         Some(x) => x,
         None => return,
     };
@@ -99,6 +89,7 @@ pub fn player_shoot_system(
                     ..default()
                 },
                 Projectile {
+                    owner: entity,
                     creation_time_sec: now,
                     lifetime_sec: 1.,
                 },
@@ -112,22 +103,21 @@ pub fn setup(
     mut meshes: ResMut<Assets<Mesh>>,
     mut materials: ResMut<Assets<StandardMaterial>>,
 ) {
-    commands.spawn((
-        Transform::from_xyz(0., -5., 0.).looking_at(Vec3::ZERO, Vec3::Z),
-        PlayerLocation,
-        Blaster {
-            cooldown_time: 1.,
-            time_of_last_shot: 0.,
-        },
-    ));
-
-    // player location cube
+    // player
     commands.spawn((
         PbrBundle {
             mesh: meshes.add(Mesh::from(shape::Cube { size: 0.1 })),
             material: materials.add(Color::rgb(0.8, 0.2, 0.1).into()),
+            transform: Transform::from_xyz(0., -5., 0.).looking_at(Vec3::ZERO, Vec3::Z),
             ..default()
         },
-        PlayerModel,
+        Blaster {
+            cooldown_time: 1.,
+            time_of_last_shot: 0.,
+        },
+        Hittable {
+            radius: Player::RADIUS,
+        },
+        Player,
     ));
 }
