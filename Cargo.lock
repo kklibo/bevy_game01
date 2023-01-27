@@ -193,6 +193,16 @@ dependencies = [
 ]
 
 [[package]]
+name = "bevy-debug-text-overlay"
+version = "4.0.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "7b7e65e2ddf9894c5fc943215136f7d4177ff095fe4efd370f4184c212a96d4b"
+dependencies = [
+ "bevy",
+ "lazy_static",
+]
+
+[[package]]
 name = "bevy_animation"
 version = "0.9.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -385,6 +395,7 @@ name = "bevy_game01"
 version = "0.1.0"
 dependencies = [
  "bevy",
+ "bevy-debug-text-overlay",
  "rand",
 ]
 
