@@ -18,30 +18,32 @@ pub fn setup(
     mut meshes: ResMut<Assets<Mesh>>,
     mut materials: ResMut<Assets<StandardMaterial>>,
 ) {
-    // enemy cube
-    commands.spawn((
-        PbrBundle {
-            mesh: meshes.add(Mesh::from(shape::Cube { size: 0.1 })),
-            material: materials.add(Color::rgb(0.8, 0.8, 0.1).into()),
-            transform: Transform::from_xyz(-4., 2., 0.).looking_at(Vec3::ZERO, Vec3::Z),
-            ..default()
-        },
-        Enemy {
-            radius: 0.1,
-            next_waypoint: Some(Vec3::ZERO),
-        },
-        Blaster {
-            time_of_last_shot: 0.,
-            cooldown_time: 1.,
-        },
-    ));
+    spawn_enemy(
+        &mut commands,
+        &mut meshes,
+        &mut materials,
+        Transform::from_xyz(-4., 2., 0.).looking_at(Vec3::ZERO, Vec3::Z),
+    );
+    spawn_enemy(
+        &mut commands,
+        &mut meshes,
+        &mut materials,
+        Transform::from_xyz(-4., 2., 0.).looking_at(Vec3::new(-5., 5., 0.), Vec3::Z),
+    );
+}
 
+pub fn spawn_enemy(
+    commands: &mut Commands,
+    meshes: &mut ResMut<Assets<Mesh>>,
+    materials: &mut ResMut<Assets<StandardMaterial>>,
+    transform: Transform,
+) {
     // enemy cube
     commands.spawn((
         PbrBundle {
             mesh: meshes.add(Mesh::from(shape::Cube { size: 0.1 })),
             material: materials.add(Color::rgb(0.8, 0.8, 0.1).into()),
-            transform: Transform::from_xyz(-4., 2., 0.).looking_at(Vec3::new(-5., 5., 0.), Vec3::Z),
+            transform,
             ..default()
         },
         Enemy {
