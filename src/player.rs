@@ -81,7 +81,10 @@ pub fn player_shoot_system(
     keyboard_input: Res<Input<KeyCode>>,
     time: Res<Time>,
 ) {
-    let (player_loc, mut blaster) = query.iter_mut().next().unwrap();
+    let (player_loc, mut blaster) = match query.iter_mut().next() {
+        Some(x) => x,
+        None => return,
+    };
 
     if keyboard_input.pressed(KeyCode::Space) {
         let now = time.elapsed_seconds();

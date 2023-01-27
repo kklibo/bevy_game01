@@ -1,5 +1,7 @@
 use bevy::prelude::*;
 
+use crate::EnemyProjectile;
+use crate::PlayerLocation;
 use crate::{spawn_explosion, Enemy};
 
 #[derive(Component)]
@@ -16,7 +18,10 @@ pub struct Projectile {
 
 pub fn projectile_physics_system(
     mut commands: Commands,
-    mut query: Query<(Entity, &mut Transform, &mut Projectile), Without<Enemy>>,
+    mut query: Query<
+        (Entity, &mut Transform, &mut Projectile),
+        (Without<EnemyProjectile>, Without<Enemy>),
+    >,
     mut query2: Query<(Entity, &mut Transform, &mut Enemy), Without<Projectile>>,
     time: Res<Time>,
 ) {
@@ -37,6 +42,37 @@ pub fn projectile_physics_system(
                 commands.entity(entity).despawn();
                 commands.entity(target_entity).despawn();
                 spawn_explosion(target_loc.translation, &mut commands, &time);
+            }
+        }
+    }
+}
+
+pub fn enemy_projectile_physics_system(
+    mut commands: Commands,
+    mut query: Query<
+        (Entity, &mut Transform, &mut Projectile),
+        (With<EnemyProjectile>, Without<PlayerLocation>),
+    >,
+    mut query2: Query<(Entity, &mut Transform), (With<PlayerLocation>, Without<EnemyProjectile>)>,
+    time: Res<Time>,
+) {
+    const MPS: f32 = 0.1;
+    const PLAYER_RADIUS: f32 = 0.1;
+
+    let now = time.elapsed_seconds();
+    for (entity, mut loc, projectile) in query.iter_mut() {
+        if projectile.creation_time_sec + projectile.lifetime_sec < now {
+            commands.entity(entity).despawn();
+            continue;
+        }
+
+        let step = loc.forward() * MPS;
+        loc.translation += step;
+
+        for (player_entity, player_loc) in query2.iter_mut() {
+            if loc.translation.distance(player_loc.translation) < PLAYER_RADIUS {
+                commands.entity(player_entity).despawn();
+                spawn_explosion(player_loc.translation, &mut commands, &time);
             }
         }
     }
