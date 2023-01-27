@@ -18,8 +18,9 @@ pub fn explosion_system(
     mut query: Query<(Entity, &mut Transform, &mut Explosion)>,
     time: Res<Time>,
 ) {
+    let now = time.elapsed_seconds();
+
     for x in explosion_events.iter() {
-        let now = time.elapsed_seconds();
         let mut entity = commands.spawn((
             PointLightBundle {
                 point_light: PointLight {
@@ -45,10 +46,16 @@ pub fn explosion_system(
         });
     }
 
-    let now = time.elapsed_seconds();
-    for (entity, _, explosion) in query.iter_mut() {
-        if explosion.creation_time_sec + explosion.lifetime_sec < now {
+    for (entity, mut transform, explosion) in query.iter_mut() {
+        if explosion.lifetime_sec == 0. {
+            continue;
+        }
+        let progress = (now - explosion.creation_time_sec) / explosion.lifetime_sec;
+
+        if progress >= 1. {
             commands.entity(entity).despawn();
         }
+
+        transform.scale = Vec3::ONE * progress;
     }
 }
