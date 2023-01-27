@@ -26,7 +26,7 @@ pub struct SpawnTimer(Timer);
 
 pub fn setup(mut commands: Commands) {
     commands.insert_resource(SpawnTimer(Timer::new(
-        Duration::from_secs(1),
+        Duration::from_secs(2),
         TimerMode::Repeating,
     )));
 }
@@ -168,6 +168,7 @@ pub fn enemy_shooting_system(
                             owner: entity,
                             creation_time_sec: now,
                             lifetime_sec: 1.,
+                            mps: Projectile::DEFAULT_MPS,
                         },
                     ));
                 }

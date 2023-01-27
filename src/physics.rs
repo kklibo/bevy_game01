@@ -13,10 +13,11 @@ pub struct Projectile {
     pub owner: Entity,
     pub creation_time_sec: f32,
     pub lifetime_sec: f32,
+    pub mps: f32,
 }
 
 impl Projectile {
-    pub const MPS: f32 = 0.1;
+    pub const DEFAULT_MPS: f32 = 0.1;
 }
 
 #[derive(Component, Debug)]
@@ -38,7 +39,7 @@ pub fn projectile_physics_system(
             continue;
         }
 
-        let step = loc.forward() * Projectile::MPS;
+        let step = loc.forward() * projectile.mps;
         loc.translation += step;
 
         for (target_entity, target_loc, hittable) in query2.iter_mut() {
