@@ -25,7 +25,7 @@ pub fn setup(
             commands.spawn(PbrBundle {
                 mesh: meshes.add(Mesh::from(shape::Plane { size: 1.0 })),
                 material: materials.add(color.into()),
-                transform: Transform::from_xyz(x as f32 * 1. - 4.5, y as f32 * 1. - 4.5, 0.)
+                transform: Transform::from_xyz(x as f32 * 1. - 4.5, y as f32 * 1. - 4.5, -1.)
                     .with_rotation(Quat::from_rotation_x(90_f32.to_radians())),
                 ..default()
             });

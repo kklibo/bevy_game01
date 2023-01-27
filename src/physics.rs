@@ -1,6 +1,6 @@
 use bevy::prelude::*;
 
-use crate::spawn_explosion;
+use crate::ExplosionEvent;
 
 #[derive(Component)]
 pub struct Blaster {
@@ -26,6 +26,7 @@ pub struct Hittable {
 
 pub fn projectile_physics_system(
     mut commands: Commands,
+    mut explosion_events: EventWriter<ExplosionEvent>,
     mut query: Query<(Entity, &mut Transform, &mut Projectile)>,
     mut query2: Query<(Entity, &mut Transform, &Hittable), Without<Projectile>>,
     time: Res<Time>,
@@ -48,7 +49,9 @@ pub fn projectile_physics_system(
             if loc.translation.distance(target_loc.translation) < hittable.radius {
                 commands.entity(entity).despawn();
                 commands.entity(target_entity).despawn();
-                spawn_explosion(target_loc.translation, &mut commands, &time);
+                explosion_events.send(ExplosionEvent {
+                    location: target_loc.translation,
+                });
             }
         }
     }

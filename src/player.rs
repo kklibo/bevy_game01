@@ -81,10 +81,13 @@ pub fn player_shoot_system(
         if blaster.time_of_last_shot + blaster.cooldown_time < now {
             blaster.time_of_last_shot = now;
 
+            let mut s: StandardMaterial = Color::rgb(0.5, 0.5, 1.0).into();
+            s.emissive = Color::rgba(0.5, 0.5, 1.0, 1.0);
+
             commands.spawn((
                 PbrBundle {
                     mesh: meshes.add(Mesh::from(shape::Cube { size: 0.05 })),
-                    material: materials.add(Color::rgb(0.5, 0.5, 1.0).into()),
+                    material: materials.add(s),
                     transform: *player_loc,
                     ..default()
                 },

@@ -32,5 +32,6 @@ pub fn main() {
         .add_system(enemy_movement_system)
         .add_system(enemy_shooting_system)
         .add_system(bevy::window::close_on_esc)
+        .add_event::<ExplosionEvent>()
         .run();
 }
