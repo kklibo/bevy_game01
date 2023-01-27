@@ -1,3 +1,5 @@
+#![allow(clippy::type_complexity)]
+
 mod arena;
 mod cameras;
 mod enemy;

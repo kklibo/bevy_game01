@@ -1,7 +1,7 @@
 use bevy::prelude::*;
 
 use crate::EnemyProjectile;
-use crate::PlayerLocation;
+use crate::Player;
 use crate::{spawn_explosion, Enemy};
 
 #[derive(Component)]
@@ -51,9 +51,9 @@ pub fn enemy_projectile_physics_system(
     mut commands: Commands,
     mut query: Query<
         (Entity, &mut Transform, &mut Projectile),
-        (With<EnemyProjectile>, Without<PlayerLocation>),
+        (With<EnemyProjectile>, Without<Player>),
     >,
-    mut query2: Query<(Entity, &mut Transform), (With<PlayerLocation>, Without<EnemyProjectile>)>,
+    mut query2: Query<(Entity, &mut Transform), (With<Player>, Without<EnemyProjectile>)>,
     time: Res<Time>,
 ) {
     const MPS: f32 = 0.1;

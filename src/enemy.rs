@@ -1,7 +1,7 @@
 use bevy::prelude::*;
 
 use crate::Blaster;
-use crate::PlayerLocation;
+use crate::Player;
 use crate::Projectile;
 
 #[derive(Component)]
@@ -56,8 +56,8 @@ pub fn setup(
 }
 
 pub fn enemy_movement_system(
-    mut query: Query<(&mut Transform, &mut Enemy), Without<PlayerLocation>>,
-    mut query2: Query<&mut Transform, (With<PlayerLocation>, Without<Enemy>)>,
+    mut query: Query<(&mut Transform, &mut Enemy), Without<Player>>,
+    mut query2: Query<&mut Transform, (With<Player>, Without<Enemy>)>,
     time: Res<Time>,
 ) {
     const MPS: f32 = 1.0;
@@ -121,8 +121,8 @@ pub fn enemy_shooting_system(
     mut commands: Commands,
     mut meshes: ResMut<Assets<Mesh>>,
     mut materials: ResMut<Assets<StandardMaterial>>,
-    mut query: Query<(&mut Transform, &mut Enemy, &mut Blaster), Without<PlayerLocation>>,
-    mut query2: Query<&mut Transform, (With<PlayerLocation>, Without<Enemy>)>,
+    mut query: Query<(&mut Transform, &mut Enemy, &mut Blaster), Without<Player>>,
+    mut query2: Query<&mut Transform, (With<Player>, Without<Enemy>)>,
     time: Res<Time>,
 ) {
     const SHOOT_RADIUS_M: f32 = 1.0;
