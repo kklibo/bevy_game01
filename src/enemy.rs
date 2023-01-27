@@ -10,8 +10,20 @@ pub struct Enemy {
     pub next_waypoint: Option<Vec3>,
 }
 
+impl Enemy {
+    pub const MPS: f32 = 1.0;
+    pub const DPS: f32 = 180.0;
+    pub const WAYPOINT_RADIUS_M: f32 = 1.0;
+    pub const VISION_RADIUS_M: f32 = 2.0;
+}
+
 #[derive(Component)]
 pub struct EnemyProjectile;
+
+impl EnemyProjectile {
+    pub const SHOOT_RADIUS_M: f32 = 1.0;
+    pub const SHOOT_ANGLE_DEG: f32 = 45.0;
+}
 
 pub fn setup(
     mut commands: Commands,
@@ -62,12 +74,6 @@ pub fn enemy_movement_system(
     mut query2: Query<&mut Transform, (With<Player>, Without<Enemy>)>,
     time: Res<Time>,
 ) {
-    const MPS: f32 = 1.0;
-    const DPS: f32 = 180.0;
-
-    const WAYPOINT_RADIUS_M: f32 = 1.0;
-    const VISION_RADIUS_M: f32 = 2.0;
-
     for (mut loc, mut enemy) in query.iter_mut() {
         let mut selected_target = None;
 
@@ -75,7 +81,7 @@ pub fn enemy_movement_system(
             //try to target player
             if let Some(player_loc) = query2.iter_mut().next() {
                 let to_player = player_loc.translation - loc.translation;
-                if to_player.length() < VISION_RADIUS_M {
+                if to_player.length() < Enemy::VISION_RADIUS_M {
                     selected_target = Some(player_loc.translation);
                 }
             }
@@ -85,7 +91,7 @@ pub fn enemy_movement_system(
             //waypoint target
             if let Some(x) = enemy.next_waypoint {
                 let to_waypoint = x - loc.translation;
-                if to_waypoint.length() < WAYPOINT_RADIUS_M {
+                if to_waypoint.length() < Enemy::WAYPOINT_RADIUS_M {
                     //new waypoint
                     // temp
                     if enemy.next_waypoint == Some(Vec3::new(-4., -4., 0.)) {
@@ -104,16 +110,16 @@ pub fn enemy_movement_system(
 
             if loc.forward().cross(to_target).dot(Vec3::Z) > 0. {
                 //turn left
-                let step = DPS * time.delta_seconds();
+                let step = Enemy::DPS * time.delta_seconds();
                 loc.rotate_z(step.to_radians());
             } else {
                 //turn right
-                let step = DPS * time.delta_seconds() * -1.;
+                let step = Enemy::DPS * time.delta_seconds() * -1.;
                 loc.rotate_z(step.to_radians());
             }
 
             //move forward
-            let step = loc.forward() * MPS * time.delta_seconds();
+            let step = loc.forward() * Enemy::MPS * time.delta_seconds();
             loc.translation += step;
         }
     }
@@ -127,14 +133,12 @@ pub fn enemy_shooting_system(
     mut query2: Query<&mut Transform, (With<Player>, Without<Enemy>)>,
     time: Res<Time>,
 ) {
-    const SHOOT_RADIUS_M: f32 = 1.0;
-    const SHOOT_ANGLE_DEG: f32 = 45.0;
-
     for (loc, _, mut blaster) in query.iter_mut() {
         if let Some(player_loc) = query2.iter_mut().next() {
             let to_player = player_loc.translation - loc.translation;
-            if to_player.length() < SHOOT_RADIUS_M
-                && to_player.angle_between(loc.forward()).to_degrees() < SHOOT_ANGLE_DEG
+            if to_player.length() < EnemyProjectile::SHOOT_RADIUS_M
+                && to_player.angle_between(loc.forward()).to_degrees()
+                    < EnemyProjectile::SHOOT_ANGLE_DEG
             {
                 let now = time.elapsed_seconds();
                 if blaster.time_of_last_shot + blaster.cooldown_time < now {

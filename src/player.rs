@@ -5,6 +5,12 @@ use crate::{Blaster, CameraName, Projectile, SelectableCamera};
 #[derive(Component)]
 pub struct Player;
 
+impl Player {
+    pub const MPS: f32 = 5.0;
+    pub const DPS: f32 = 180.0;
+    pub const RADIUS: f32 = 0.1;
+}
+
 pub fn player_location_system(
     mut query: Query<(&mut Transform, &SelectableCamera), Without<Player>>,
     mut query2: Query<&mut Transform, With<Player>>,
@@ -16,23 +22,20 @@ pub fn player_location_system(
         None => return,
     };
 
-    const MPS: f32 = 5.0;
-    const DPS: f32 = 180.0;
-
     if keyboard_input.pressed(KeyCode::Up) {
-        let step = player_loc.forward() * MPS * time.delta_seconds();
+        let step = player_loc.forward() * Player::MPS * time.delta_seconds();
         player_loc.translation += step;
     }
     if keyboard_input.pressed(KeyCode::Down) {
-        let step = player_loc.back() * MPS * time.delta_seconds();
+        let step = player_loc.back() * Player::MPS * time.delta_seconds();
         player_loc.translation += step;
     }
     if keyboard_input.pressed(KeyCode::Left) {
-        let step = DPS * time.delta_seconds();
+        let step = Player::DPS * time.delta_seconds();
         player_loc.rotate_z(step.to_radians());
     }
     if keyboard_input.pressed(KeyCode::Right) {
-        let step = DPS * time.delta_seconds() * -1.0;
+        let step = Player::DPS * time.delta_seconds() * -1.0;
         player_loc.rotate_z(step.to_radians());
     }
 
