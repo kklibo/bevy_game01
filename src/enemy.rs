@@ -1,12 +1,12 @@
 use bevy::prelude::*;
 
 use crate::Blaster;
+use crate::Hittable;
 use crate::Player;
 use crate::Projectile;
 
 #[derive(Component)]
 pub struct Enemy {
-    pub radius: f32,
     pub next_waypoint: Option<Vec3>,
 }
 
@@ -15,12 +15,6 @@ impl Enemy {
     pub const DPS: f32 = 180.0;
     pub const WAYPOINT_RADIUS_M: f32 = 1.0;
     pub const VISION_RADIUS_M: f32 = 2.0;
-}
-
-#[derive(Component)]
-pub struct EnemyProjectile;
-
-impl EnemyProjectile {
     pub const SHOOT_RADIUS_M: f32 = 1.0;
     pub const SHOOT_ANGLE_DEG: f32 = 45.0;
 }
@@ -59,13 +53,13 @@ pub fn spawn_enemy(
             ..default()
         },
         Enemy {
-            radius: 0.1,
             next_waypoint: Some(Vec3::ZERO),
         },
         Blaster {
             time_of_last_shot: 0.,
             cooldown_time: 1.,
         },
+        Hittable { radius: 0.1 },
     ));
 }
 
@@ -129,16 +123,15 @@ pub fn enemy_shooting_system(
     mut commands: Commands,
     mut meshes: ResMut<Assets<Mesh>>,
     mut materials: ResMut<Assets<StandardMaterial>>,
-    mut query: Query<(&mut Transform, &mut Enemy, &mut Blaster), Without<Player>>,
+    mut query: Query<(Entity, &mut Transform, &mut Enemy, &mut Blaster), Without<Player>>,
     mut query2: Query<&mut Transform, (With<Player>, Without<Enemy>)>,
     time: Res<Time>,
 ) {
-    for (loc, _, mut blaster) in query.iter_mut() {
+    for (entity, loc, _, mut blaster) in query.iter_mut() {
         if let Some(player_loc) = query2.iter_mut().next() {
             let to_player = player_loc.translation - loc.translation;
-            if to_player.length() < EnemyProjectile::SHOOT_RADIUS_M
-                && to_player.angle_between(loc.forward()).to_degrees()
-                    < EnemyProjectile::SHOOT_ANGLE_DEG
+            if to_player.length() < Enemy::SHOOT_RADIUS_M
+                && to_player.angle_between(loc.forward()).to_degrees() < Enemy::SHOOT_ANGLE_DEG
             {
                 let now = time.elapsed_seconds();
                 if blaster.time_of_last_shot + blaster.cooldown_time < now {
@@ -152,10 +145,10 @@ pub fn enemy_shooting_system(
                             ..default()
                         },
                         Projectile {
+                            owner: entity,
                             creation_time_sec: now,
                             lifetime_sec: 1.,
                         },
-                        EnemyProjectile,
                     ));
                 }
             }

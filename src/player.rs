@@ -1,5 +1,6 @@
 use bevy::prelude::*;
 
+use crate::physics::Hittable;
 use crate::{Blaster, CameraName, Projectile, SelectableCamera};
 
 #[derive(Component)]
@@ -66,11 +67,11 @@ pub fn player_shoot_system(
     mut commands: Commands,
     mut meshes: ResMut<Assets<Mesh>>,
     mut materials: ResMut<Assets<StandardMaterial>>,
-    mut query: Query<(&mut Transform, &mut Blaster), With<Player>>,
+    mut query: Query<(Entity, &mut Transform, &mut Blaster), With<Player>>,
     keyboard_input: Res<Input<KeyCode>>,
     time: Res<Time>,
 ) {
-    let (player_loc, mut blaster) = match query.iter_mut().next() {
+    let (entity, player_loc, mut blaster) = match query.iter_mut().next() {
         Some(x) => x,
         None => return,
     };
@@ -88,6 +89,7 @@ pub fn player_shoot_system(
                     ..default()
                 },
                 Projectile {
+                    owner: entity,
                     creation_time_sec: now,
                     lifetime_sec: 1.,
                 },
@@ -112,6 +114,9 @@ pub fn setup(
         Blaster {
             cooldown_time: 1.,
             time_of_last_shot: 0.,
+        },
+        Hittable {
+            radius: Player::RADIUS,
         },
         Player,
     ));
