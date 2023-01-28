@@ -17,3 +17,5 @@ opt-level = 3
 [dependencies]
 # bevy = "0.9.1"
 bevy = { version = "0.9.1", features = ["dynamic"] }
+rand = "0.8.5"
+bevy-debug-text-overlay = "4.0"

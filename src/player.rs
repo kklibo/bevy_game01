@@ -95,6 +95,7 @@ pub fn player_shoot_system(
                     owner: entity,
                     creation_time_sec: now,
                     lifetime_sec: 1.,
+                    mps: 0.2,
                 },
             ));
         }
@@ -115,7 +116,7 @@ pub fn setup(
             ..default()
         },
         Blaster {
-            cooldown_time: 1.,
+            cooldown_time: 0.5,
             time_of_last_shot: 0.,
         },
         Hittable {

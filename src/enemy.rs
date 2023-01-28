@@ -1,4 +1,6 @@
 use bevy::prelude::*;
+use rand::Rng;
+use std::time::Duration;
 
 use crate::Blaster;
 use crate::Hittable;
@@ -19,26 +21,36 @@ impl Enemy {
     pub const SHOOT_ANGLE_DEG: f32 = 45.0;
 }
 
-pub fn setup(
+#[derive(Resource)]
+pub struct SpawnTimer(Timer);
+
+pub fn setup(mut commands: Commands) {
+    commands.insert_resource(SpawnTimer(Timer::new(
+        Duration::from_secs(2),
+        TimerMode::Repeating,
+    )));
+}
+
+pub fn spawn_enemy_system(
     mut commands: Commands,
     mut meshes: ResMut<Assets<Mesh>>,
     mut materials: ResMut<Assets<StandardMaterial>>,
+    time: Res<Time>,
+    mut timer: ResMut<SpawnTimer>,
 ) {
-    spawn_enemy(
-        &mut commands,
-        &mut meshes,
-        &mut materials,
-        Transform::from_xyz(-4., 2., 0.).looking_at(Vec3::ZERO, Vec3::Z),
-    );
-    spawn_enemy(
-        &mut commands,
-        &mut meshes,
-        &mut materials,
-        Transform::from_xyz(-4., 2., 0.).looking_at(Vec3::new(-5., 5., 0.), Vec3::Z),
-    );
+    timer.0.tick(time.delta());
+
+    if timer.0.finished() {
+        spawn_enemy(
+            &mut commands,
+            &mut meshes,
+            &mut materials,
+            Transform::from_translation(random_coord()).looking_at(random_coord(), Vec3::Z),
+        );
+    }
 }
 
-pub fn spawn_enemy(
+fn spawn_enemy(
     commands: &mut Commands,
     meshes: &mut ResMut<Assets<Mesh>>,
     materials: &mut ResMut<Assets<StandardMaterial>>,
@@ -61,6 +73,16 @@ pub fn spawn_enemy(
         },
         Hittable { radius: 0.1 },
     ));
+}
+
+fn random_coord() -> Vec3 {
+    let mut rng = rand::thread_rng();
+
+    Vec3::new(
+        rng.gen_range(-4..=4) as f32,
+        rng.gen_range(-4..=4) as f32,
+        0.,
+    )
 }
 
 pub fn enemy_movement_system(
@@ -87,12 +109,7 @@ pub fn enemy_movement_system(
                 let to_waypoint = x - loc.translation;
                 if to_waypoint.length() < Enemy::WAYPOINT_RADIUS_M {
                     //new waypoint
-                    // temp
-                    if enemy.next_waypoint == Some(Vec3::new(-4., -4., 0.)) {
-                        enemy.next_waypoint = None;
-                    } else {
-                        enemy.next_waypoint = Some(Vec3::new(-4., -4., 0.));
-                    }
+                    enemy.next_waypoint = Some(random_coord());
                     continue;
                 }
                 selected_target = Some(x);
@@ -151,6 +168,7 @@ pub fn enemy_shooting_system(
                             owner: entity,
                             creation_time_sec: now,
                             lifetime_sec: 1.,
+                            mps: Projectile::DEFAULT_MPS,
                         },
                     ));
                 }
